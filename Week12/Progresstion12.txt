@@ -1,0 +1,26 @@
+Fetch API ดึงข้อมูลจาก data/db.json ของbackendมาใช้
+โดยจะเริ่มสร้างจาก install json-server and install vite. สร้างfolder 
+css/style.css, index.html, js/app.js and มี myLibrary ไว้ใช้เรียกอยู๋ใน js, 
+สร้าง quoteManagement มาเก็บ db.json ไว้ .env -> คือการเชื่อม frontend กับ backend ที่ port 5000ใ
+1.นำเข้า loadQuotes จากโมดูลอื่น ใน app.js(import มาจาก quoteManagement)
+2.ดึง element จาก index.html เมื่อปุ่มถูกคลิกจะ นำdata.json จาก backend มาใช้
+3.โดยจะให้ปุ่มใช้ async function เรียก loadQuotes() แบบ await เพื่อรอผล
+4.ล้างรายการเดิม แล้ววนแสดงข้อมูลใหม่
+
+import { loadQuotes } from "./quoteManagement.js";
+
+const buttonLoadBtn = document.getElementById("loadBtn");
+const ulUserList = document.getElementById("userList");
+
+buttonLoadBtn.addEventListener("click", async () => {
+  const users = await loadQuotes();
+  console.log(users);
+
+  ulUserList.textContent = ""   
+
+  users.forEach(user => {
+    const li = document.createElement("li");
+    li.textContent = `${user.name} - ${user.email}`;
+    ulUserList.appendChild(li);
+  });
+});
