@@ -1,0 +1,86 @@
+Form Handling + DOM Manipulation + CRUD (Create/Delete)
+เริ่มด้วยสร้างไฟล์ fetchUtils.js สร้าง async function deleteItem and addItem
+โดยแต่ละ function จะมี method "Delete" of async function deleteItem และ method "POST" of async function addItem
+ใช้ try catch ของแต่ละ function โดยถ้า error ให้catch ข้อความขึ้น `Fail to delete item: ตามด้วย status`
+throw new Error(`Fail to delete item: ${res.status} - ${res.statusText}`)
+
+จากนั้นสร้างไฟล์ quoteManagements.js import delete and add มาใช้
+สร้าง async function deleteQuote and addQuote ใช้ตัวแปร Environment Variable (VITE_APP_URL) จากไฟล์ .env
+const quoteURL = `${import.meta.env.VITE_APP_URL}/quotes`
+
+1.async function deleteQuote
+รับ quoteId เข้ามา (เป็นเลข ID ของquoteที่จะลบ)
+เรียกใช้ฟังก์ชัน deleteItem(quoteURL, quoteId) → ส่งคำสั่ง DELETE ไปยัง API เช่น DELETE http://localhost:5000/quotes/3
+รอผลลัพธ์จาก API ด้วย await
+ถ้าทำงานสำเร็จ จะคืนค่า deleteId
+ถ้ามี error จะโยนข้อความ "Quote: ${e.message}"
+
+
+2.async function addQuote
+เรียก addItem(quoteURL, quote) → ส่ง method POST request ไปยัง API เช่น POST http://localhost:5000/quotes
+API จะเพิ่มข้อมูลใหม่ และส่ง object ของ quote ที่ถูกสร้างกลับมา
+ฟังก์ชันนี้จะ return addedItem เพื่อให้ส่วนอื่นของโปรแกรมนำไปใช้ต่อได้
+ถ้ามี error จะโยนข้อความ "Quote: ${e.message}"
+
+จากนั้นสร้างไฟล์ app.js 
+สร้าง deleteButton เพิ่ม class and ข้อความ = 'delete'
+ให้ deleteButton.addEventListener("click", handleDelete) ทำงานเมื่อคลิก
+
+สร้าง formEle ดึง id="quoteForm" ใน index.html
+formEle = document.getElementById("quoteForm")
+และ formEle.addEventListener("submit", handleAddEdit) ทำงานเมื่อกดปุ่ม submit
+
+สร้าง async function handleAddEdit, handleDelete
+1.async function handleAddEdit(e) 
+  e.preventDefault()
+  ดึงค่าที่กรอกมาจาก input ในฟอร์ม
+  <input name="quoteId"> → ใช้ตรวจว่ากำลังแก้ไข quote เดิมหรือไม่
+<input name="content"> → เนื้อหาของ quote
+<input name="author"> → ชื่อผู้เขียน
+.trim() ใช้ตัดช่องว่างหัวท้ายออก เพื่อป้องกันข้อมูลผิดพลาด
+  const quoteId = formEle.quoteId.value
+  const content = formEle.content.value.trim()
+  const author = formEle.author.value.trim()
+เรียกใช้ฟังก์ชัน addQuote() เพื่อเพิ่ม quote ใหม่
+await จะรอจนกว่าฟังก์ชัน addQuote() ส่ง quote ที่เพิ่มสำเร็จกลับมา
+ใช้ newQuoteElement(newQuote) เพื่อสร้าง <div> ใหม่ใน DOM
+จากนั้น append เข้าไปใน <div id="quoteList">
+  if (quoteId) {
+    //add
+    try {
+      const newQuote = await addQuote({ content, author }) //{{content:content, author:author}}
+      const newQuoteDivEle = newQuoteElement(newQuote)
+      const divQuoteListEle = document.getElementById("quoteList")
+      divQuoteListEle.appendChild(newQuoteDivEle)
+    } catch (e) {
+      alert(e)
+    }
+  }
+  formEle.content.value = ""
+  formEle.author.value = ""
+  formEle.quoteId.value = ""
+
+2.async function handleDelete(e)
+<button data-id="3" onclick="handleDelete(event)">Delete</button>
+รับ event object (e) มา ซึ่งเก็บข้อมูลของเหตุการณ์นั้น เช่นว่าใครเป็นคนคลิก --> (e.target)
+ใช้ฟังก์ชัน confirm("Do you want to delete?") ของ browser เพื่อแสดงกล่องยืนยัน
+
+const id = e.target.dataset.id
+ปุ่ม "Delete" ใน HTML มักจะมี data-id
+ในกรณีนี้ data-id=3 จะดึงค่า "3" ออกมา
+ตัวแปร id นี้จะถูกส่งไปลบในdatabaseต่อไป
+
+เมื่อ API ลบเสร็จแล้ว เราต้องลบ element ใน DOM ที่แสดง quote นั้นออกด้วย
+เพื่อให้หน้าเว็บอัปเดตแบบเรียลไทม์ โดยไม่ต้อง refresh
+document.querySelector(div[data-id="${id}"]) → ค้นหา <div> ที่มี data-id ตรงกับ quote ที่ถูกลบ
+if(deleteQuoteId) {
+  const divDeleteQuote = document.querySelector(`div[data-id="${id}"]`)
+  const divQuoteList = document.getElementById("quoteList")
+  divQuoteList.removeChild(divDeleteQuote)
+}
+
+ถ้าเกิด error ระบบจะขึ้นข้อความแจ้งเตือน (alert) ให้userทราบ
+catch (e) {
+  alert(e.message)
+}
+
