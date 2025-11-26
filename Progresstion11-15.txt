@@ -1,0 +1,50 @@
+Progression11: 
+โหลดรายการ Study Plans จาก backend,
+แสดงผลบนตาราง,
+ตรวจสอบว่า login แล้วหรือยัง,
+ถ้า login แล้ว → redirect ไปหน้า reserve,
+ปุ่ม manage → ไปหน้า reserve
+
+Progression12: สร้างระบบ Quote/User Management (CRUD) โดยเริ่มที่ฟังก์ชันโหลดข้อมูล (Read)
+โดยแยก logic เป็น 3 layer:
+fetchUtils: fetch API แบบ generic
+quoteManagement(CRUD)
+UI: ส่วนที่กดปุ่มและแสดงผล
+
+Progression13: Handling + DOM Manipulation + CRUD (Create/Delete)
+คุณได้ออกแบบระบบ Quote Management โดยแยกโค้ดออกเป็น 3 Layer อย่างเป็นระเบียบ:
+
+Fetch Utilities
+แยกฟังก์ชันพื้นฐานสำหรับการติดต่อ API รองรับ POST / DELETE และรวม error handling
+quoteManagement (CRUD)
+สร้างฟังก์ชันเฉพาะของ quotes เช่น addQuote, deleteQuote ช่วยให้ UI ไม่ต้องยุ่งกับ URL หรือ fetch ตรง ๆ
+UI Logic & DOM
+จัดการ event, สร้าง DOM element ของ quotes, update UI แบบ real-time เมื่อ delete หรือ add สำเร็จ
+
+Progression14: (Create + Update + Read)
+fetchUtils.js
+function getItems, addItem, editItem สำหรับติดต่อ API
+ตรวจสอบ status code และ handle error
+quoteManagement.js(CRUD)
+function loadQuotes, addQuote, editQuote
+ใช้ util  ทำงานกับ API เฉพาะ quote
+UI: (DOM + Event)
+โหลด quote ตอนหน้าเว็บโหลด (DOMContentLoaded)
+สร้าง DOM ของ quote แต่ละอัน (newQuoteElement)
+ฟอร์มสำหรับเพิ่ม/แก้ไข quote (handleAddEdit)
+ปุ่ม Edit สำหรับแก้ไข quote (handleEdit)
+
+
+Progression15: สร้างระบบให้สามารถ กดปุ่ม “Change” เพื่อประกาศหรือแก้ไข Study Plan โดยใช้ async function แยกตาม HTTP method (POST/PUT)
+สร้าง postDeclaredPlan และ putDeclaredPlan สำหรับสร้างและแก้ไข plan
+สร้าง declarePlan(studyPlans, isUpdate) เพื่อจัดการ logic ทั้งหมด:
+เลือก function request ตาม isUpdate (POST หรือ PUT)
+ตรวจสอบ plan ที่เลือกจาก dropdown
+ส่ง request ไป API และจัดการ response ด้วย try/catch
+การจัดการ response:
+200 OK (PUT) → merge ข้อมูล, แปลงเวลาเป็น local, update UI, แสดง modal success
+404 Not Found → แสดง modal ว่าไม่พบ declared plan, รีโหลด UI
+201 Created (POST) → รีโหลด UI หลังสร้าง plan ใหม่
+409 Conflict → แสดง modal ว่าเคยdeclaredแล้ว, รีโหลด UI
+500/502/503 → แสดง modal แจ้งบอก server error
+กรณีerrorอื่น ๆ → alert error
