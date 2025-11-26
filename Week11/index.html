@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Plan</title>
+    <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+    <header>
+        <img src="./src/pics/SIT-logo.png" class="header-logo">
+        <span>Study Plan Declaration System</span>
+    </header>
+
+    <main>
+       <div class="main-header">
+    <h2>B.Sc.IT - Study Plans</h2>
+    <button id="ecors-button-manage" class="ecors-button-manage">Manage study plan declaration and course reservation</button></div>
+
+        <table id="studyTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Study Code</th>
+                    <th>English Name</th>
+                    <th>Thai Name</th>
+                </tr>
+            </thead>
+            <tbody id="plansTable">
+                <!-- Data will be inserted here by JS -->
+            </tbody>
+        </table>
+    </main>
+
+    <footer>
+        © 2025 School of Information Technology, KMUTT
+    </footer>  
+
+    <!-- Modal -->
+    <dialog id="errorModal" class="ecors-dialog" closedby="none">
+        <div class="ecors-dialog-message">There is a problem. Please try again later.</div>
+    </dialog>
+    
+    
+    <script type="module" src="app.js"></script>
+</body>
+</html>

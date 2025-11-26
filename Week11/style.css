@@ -1,0 +1,165 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f5f5f5;
+}
+
+header {
+  background: #003366;
+  color: white;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-logo {
+  height: 40px;
+}
+
+header span {
+  font-size: 18px;
+  flex: 1;
+}
+
+header p {
+  margin: 0;
+  font-weight: bold;
+}
+
+main {
+  padding: 20px;
+  background: white;
+  margin: 20px;
+  border-radius: 8px;
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.main-header h2 {
+  margin: 0;
+}
+
+#ecors-button-manage {
+  padding: 10px 20px;
+  background-color: #003366;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+#ecors-button-manage:hover {
+  background-color: #005399;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+th {
+  background-color: #003366;
+  color: white;
+}
+
+footer {
+  display: flex;
+  justify-content: center;
+}
+
+.ecors-dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.ecors-dialog-message {
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.userBox {
+  margin-left: auto; 
+  display: flex; 
+  gap: 10px; 
+  align-items: center;
+}
+
+.reserve-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+  margin-bottom: 20px;
+}
+
+.reserve-container label {
+  font-weight: bold;
+  color: #003366;
+}
+
+.reserve-container p {
+  margin: 10px 0; 
+  font-weight: bold;
+}
+
+.ecors-dropdown-plan {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.ecors-dropdown-plan:hover {
+  border-color: #003366;
+}
+
+.ecors-dropdown-plan:focus {
+  outline: none;
+  border-color: #003366;
+  box-shadow: 0 0 5px rgba(0, 51, 102, 0.3);
+}
+
+.ecors-button-declare {
+  width: 20%;
+  height: 30px;
+  background-color: rgb(222, 219, 219);
+  border-radius: 10px;
+  border-color: rgb(203, 201, 201);
+}
+.ecors-button-change {
+  width: 20%;
+  height: 30px;
+  background-color: rgb(222, 219, 219);
+  border-radius: 10px;
+  border-color: rgb(203, 201, 201);
+}
+#ecors-button-cancel {
+  display: none;
+  width: 40%;
+  height: 30px;
+  background-color: rgb(222, 219, 219);
+  border-radius: 10px;
+  border-color: rgb(203, 201, 201);
+}

@@ -1,0 +1,143 @@
+สิ่งที่ผมทำใน Integrated Project สามารถกดปุ่ม "Change" ได้
+เริ่มจาก สร้าง async function ของแต่ละ method ละไปเรียกใช้ใน declarePlan
+// ---------------------------
+// POST METHOD
+// ---------------------------
+async function postDeclaredPlan(studentId, token, payload) {
+  return fetch(
+    `${BACKEND_URL}/api/v1/students/${studentId}/declared-plan`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    }
+  );
+}
+
+// ---------------------------
+// PUT METHOD
+// ---------------------------
+async function putDeclaredPlan(studentId, token, payload) {
+  return await fetch(
+    `${BACKEND_URL}/api/v1/students/${studentId}/declared-plan`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    }
+  );
+}
+
+สร้าง async function declarePlan(studyPlans, isUpdate = false)และกำหนดตัวแปรและเรียก domElement
+
+เลือก function request ตาม isUpdate
+let requestFn = isUpdate ? putDeclaredPlan : postDeclaredPlan;
+requestFn จะเป็น putDeclaredPlan เมื่อแก้ไข (update) หรือ postDeclaredPlan เมื่อสร้างใหม่
+ข้อสังเกต: ถ้า putDeclaredPlan หรือ postDeclaredPlan ไม่ได้ถูกนิยาม จะเกิด runtime error 
+
+จากนั้นเรียก API และจัดการ response (try/catch)
+ใช้ if-else
+หาก 200 OK → อ่าน body (res.json()), รวมข้อมูลกับ studyPlans ผ่าน mergeDeclaredWithStudyPlan,
+แปลงเวลา updated.updatedAt ให้เป็นlocaltime หาชื่อ timezone และอัปเดตข้อความใน #ecors-declared-plan.
+ จากนั้นแสดง modal ว่าอัพเดตสำเร็จ และรีโหลด declared plan โดยเรียก loadDeclaredPlan.
+
+หาก 404 → แสดง modal ว่าไม่พบ declared plan และเรียก loadDeclaredPlan เพื่อรีเฟรช UI
+ใช้ errorModal บอก success "Declaration updated."
+
+นอกเหนือจากนั้น
+หาก 201 Created → รีโหลด declared plan (เพื่ออัปเดต UI)
+หาก 409 Conflict → แสดง modal "You may have declared study plan already. Please check again." แล้วรีโหลด UI
+
+จัดการ server errors ทั่วไป
+ถ้า server ตอบ 500 or 502 or 503 — แสดง "There is a problem. Please try again later."
+หาก status ไม่ถูกจับในกรณีข้างบน และไม่เข้าเงื่อนไขใด ๆ — จะ alert("Error declaring plan.")
+
+async function declarePlan(studyPlans, isUpdate = false) {
+  const token = localStorage.getItem("kc_token");
+  const decoded = decodeToken(token);
+  const studentId = decoded?.preferred_username;
+  const dropdown = document.querySelector(".ecors-dropdown-plan");
+  const planId = dropdown.value;
+
+  if (!planId) {
+    alert("Please select a plan");
+    return;
+  }
+
+  const payload = {
+    planId: Number(planId),
+  };
+
+  let requestFn = isUpdate ? putDeclaredPlan : postDeclaredPlan;
+
+  try {
+    const res = await requestFn(studentId, token, payload);
+
+    // -------------------------------
+    // UPDATE (PUT)
+    // -------------------------------
+    if (isUpdate) {
+      if (res.status === 200) {
+        const updated = await res.json();
+        const merged = mergeDeclaredWithStudyPlan(updated, studyPlans);
+        const local = convertUTCToLocalFormatted(updated.updatedAt);
+        const tz = getBrowserTimezone();
+
+        document.getElementById("ecors-declared-plan").textContent =
+          `Declared ${merged.planCode} - ${merged.nameEng} on ${local} (${tz})`;
+
+        errorModal.querySelector(".ecors-dialog-message").textContent = "Declaration updated.";
+        errorModal.showModal();
+
+        await loadDeclaredPlan(studyPlans); // refresh UI
+        return;
+      }
+
+      if (res.status === 404) {
+        errorModal.querySelector(".ecors-dialog-message").textContent =
+          `No declared plan found for student with id=${studentId}.`;
+        errorModal.showModal();
+        return await loadDeclaredPlan(studyPlans);
+      }
+    }
+    // -------------------------------
+    // CREATE (POST)
+    // -------------------------------
+    else {
+      if (res.status === 201) {
+        await loadDeclaredPlan(studyPlans);
+        return;
+      }
+
+      if (res.status === 409) {
+        errorModal.querySelector(".ecors-dialog-message").textContent =
+          "You may have declared study plan already. Please check again.";
+        errorModal.showModal();
+        await loadDeclaredPlan(studyPlans); // refresh UI
+        return;
+      }
+    }
+
+    // ----------- SERVER ERROR -----------
+    if ([500, 502, 503].includes(res.status)) {
+      errorModal.querySelector(".ecors-dialog-message").textContent =
+        "There is a problem. Please try again later.";
+      errorModal.showModal();
+      return;
+    }
+
+    alert("Error declaring plan.");
+
+  } catch (err) {
+    console.error("Declare Error:", err);
+    errorModal.querySelector(".ecors-dialog-message").textContent =
+      "There is a problem. Please try again later.";
+    errorModal.showModal();
+  }
+}

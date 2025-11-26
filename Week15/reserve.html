@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Reservation</title>
+    <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+    <header>
+        <img src="./src/pics/SIT-logo.png" class="header-logo">
+        <span>Course Reservation</span>
+        <div id="userBox" style="margin-left:auto; display:flex; gap:10px; align-items:center;">
+            <span id="ecors-fullname" class="ecors-fullname"></span>
+            <button id="ecors-button-signout" class="ecors-button-signout">Sign Out</button>
+        </div>
+    </header>
+
+    <main>
+        <h2>Select Study Plan</h2>
+
+        <div class="reserve-container">
+            <label for="planDropdown">Study Plan:</label>
+            <select class="ecors-dropdown-plan">
+                <option value="">-- Select Major --</option>
+            </select>
+
+            <p>Declaration Status:
+                <span id="ecors-declared-plan" class="ecors-declared-plan">Not Declared</span>
+            </p>
+
+            <!-- Declare button -->
+            <button class="ecors-button-declare" disabled>Declare</button>
+
+            <!-- Change button -->
+            <button class="ecors-button-change" hidden>Change</button>
+        </div>
+    </main>
+
+    <footer>
+        © 2025 School of Information Technology, KMUTT
+    </footer>
+
+    <!-- 409 declare error Modal -->
+    <!-- Combined Modal (Error + Delete Confirmation) -->
+<dialog id="errorModal" class="ecors-dialog" closedby="none">
+  <div class="ecors-dialog-message"></div>
+  <button class="ecors-button-dialog" id="errorOkBtn">Ok</button>
+</dialog>
+
+
+    <script type="module" src=".reserve.js"></script>
+</body>
+</html>

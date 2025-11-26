@@ -1,0 +1,121 @@
+Plan homepage
+กำหนดค่าคอนฟิกสำหรับ Keycloak/Backend ตรวจสถานะการล็อกอิน/รีไดเร็กต์ไปหน้า reserve, และโหลดตาราง study plans จาก backend แล้วแสดงใน DOM
+const BACKEND_URL = "https://bscit.sit.kmutt.ac.th/intproj25/ssa1/itb-ecors";
+const KEYCLOAK_AUTH_URL = "https://bscit.sit.kmutt.ac.th/intproj25/ft/keycloak";
+const REALM = "itb-ecors";
+const CLIENT_ID = "itb-ecors-ssa1";
+
+const BASE_PATH = window.location.pathname.replace(/[^/]*$/, "");
+const REDIRECT_URI = window.location.origin + BASE_PATH + "reserve.html";
+
+BACKEND_URL — base URL ของ API (ใช้เรียก study-plans)
+KEYCLOAK_AUTH_URL, REALM, CLIENT_ID — ค่าที่ใช้สร้างลิงก์เข้าสู่ Keycloak 
+BASE_PATH, REDIRECT_URI — สร้าง redirect URI แบบไดนามิกจาก path ปัจจุบัน (ใช้ตอน redirect กลับหลังล็อกอิน)
+
+1.ตรวจสถานะล็อกอิน — isLoggedIn()
+function isLoggedIn() {
+  return localStorage.getItem("kc_token") !== null;
+}
+ตรวจว่า token อยู่ใน localStorage หรือไม่ (kc_token)
+
+2.รีไดเร็กต์อัตโนมัติถ้าล็อกอินอยู่ — autoRedirectIfLoggedIn()
+function autoRedirectIfLoggedIn() {
+  if (isLoggedIn()) {
+    window.location.href = "reserve.html";
+  }
+}
+ถ้ามี token อยู่ → ส่งผู้ใช้ไป reserve.html
+เรียกจาก DOMContentLoaded — ถ้า user เปิดหน้า plan ขณะที่ล็อกอินอยู่ จะถูกส่งไปหน้า reserve ทันที
+3. สร้างลิงก์ไปหน้า Keycloak Login — goToKeycloakLogin() และ forceKeycloakLogin()
+function goToKeycloakLogin() {
+  if (isLoggedIn()) {
+    window.location.href = "reserve.html";
+    return;
+  }
+
+  const loginURL = `${KEYCLOAK_AUTH_URL}/realms/${REALM}/protocol/openid-connect/auth` +
+    `?client_id=${encodeURIComponent(CLIENT_ID)}` +
+    `&redirect_uri=${REDIRECT_URI}` +
+    `&response_type=code`;
+
+  window.location.href = loginURL;
+}
+
+function forceKeycloakLogin() {
+  const loginURL = `${KEYCLOAK_AUTH_URL}/realms/${REALM}/protocol/openid-connect/auth` +
+    `?client_id=${encodeURIComponent(CLIENT_ID)}` +
+    `&redirect_uri=${REDIRECT_URI}` +
+    `&response_type=code` +
+    `&prompt=login`;
+
+  window.location.href = loginURL;
+}
+goToKeycloakLogin():
+ถ้ายังไม่ล็อกอิน สร้าง URL สำหรับ OIDC auth request แล้ว redirect เพื่อให้ Keycloak จัดการ (response_type=code → Authorization Code flow)
+ถ้าล็อกอินแล้ว จะไป reserve.html เลย
+forceKeycloakLogin():
+เพิ่มตรงส่วน prompt=login เพื่อบังคับให้ Keycloak แสดงหน้า login (ใช้หากเมื่อต้องการให้ user สลับบัญชี)
+
+4.โหลด Study Plans จาก Backend และแสดงในตาราง — loadStudyPlans()
+async function loadStudyPlans() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/v1/study-plans`);
+    if (!res.ok) throw new Error("Request failed");
+    const plans = await res.json();
+
+    const tableBody = document.getElementById("plansTable");
+    tableBody.innerHTML = "";
+
+    plans.forEach(plan => {
+      const trEle = document.createElement('tr');
+      trEle.className = 'ecors-row';
+
+      const tdIDEle = document.createElement('td');
+      tdIDEle.className = 'ecors-id';
+      tdIDEle.textContent = plan.id;
+      trEle.appendChild(tdIDEle);
+
+      const tdStudyCodeEle = document.createElement('td');
+      tdStudyCodeEle.className = 'ecors-planCode';
+      tdStudyCodeEle.textContent = plan.planCode;
+      trEle.appendChild(tdStudyCodeEle);
+
+      const tdEngNameEle = document.createElement('td');
+      tdEngNameEle.className = 'ecors-nameEng';
+      tdEngNameEle.textContent = plan.nameEng;
+      trEle.appendChild(tdEngNameEle);
+
+      const tdThaiNameEle = document.createElement('td');
+      tdThaiNameEle.className = 'ecors-nameTh';
+      tdThaiNameEle.textContent = plan.nameTh;
+      trEle.appendChild(tdThaiNameEle);
+
+      tableBody.appendChild(trEle);
+    });
+  } catch (err) {
+    console.error(err);
+    document.getElementById("errorModal").showModal();
+  }
+}
+เรียก fetch ไปที่ BACKEND_URL + /api/v1/study-plans (GET)
+ถ้า res.ok เป็น false → โยน Error (จะไป catch)
+แปลง response เป็น JSON --> ได้ array ของ plans
+หา element ที่ id plansTable (<tbody id="plansTable">)
+ลบเนื้อหาเก่าด้วย innerHTML = ""
+ใช้ forEach
+วนลูป plans.forEach แล้วสร้าง <tr> + <td> สำหรับแต่ละฟิลด์ (id, planCode, nameEng, nameTh)
+append <tr> ลงใน tableBody
+ถ้ามี error (network, JSON parse ฯลฯ) → log ลง console และแสดง errorModal (สมมติมี <dialog id="errorModal"> ใน DOM)
+5.INIT — ผูก event เมื่อ DOM โหลดเสร็จ
+document.addEventListener("DOMContentLoaded", () => {
+  loadStudyPlans();
+  autoRedirectIfLoggedIn();
+
+  document.querySelector(".ecors-button-manage")
+    .addEventListener("click", () => {
+      window.location.href = "reserve.html";
+    });
+});
+เมื่อ DOM พร้อม → เรียก loadStudyPlans() เพื่อแสดงตารางทันที
+เรียก autoRedirectIfLoggedIn() — ถ้าล็อกอินแล้วจะรีไดเร็กต์ไป reserve.html
+หา element ปุ่ม .ecors-button-manage แล้วผูก click ให้ไป reserve.html (ปุ่มสำหรับผู้ใช้กดเพื่อจัดการ/จอง)

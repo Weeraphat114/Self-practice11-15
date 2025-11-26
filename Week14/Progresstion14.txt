@@ -1,0 +1,96 @@
+(Create + Update + Read)
+เริ่มจาก fetchAPI เพื่อทำงานกับ backend จาก fetchUtils.js
+getItems(url) → GET data จาก API พร้อมจัดการ error status เช่น 401, 404
+addItem(url, item) → POST เพื่อเพิ่มข้อมูลใหม่
+editItem(url, item) → PUT เพื่อแก้ไขข้อมูลที่มีอยู่
+
+มาทำในส่วน quoteManagements.js
+สร้าง functions manage quotes โดยตรงและ export ไปยัง app.js
+loadQuotes() — ควรคืนค่า array ของ quotes (GET)
+addQuote() — POST เพื่อเพิ่ม quote ใหม่ แล้วคืน object ของ quote ที่ถูกสร้าง
+editQuote() — PUT เพื่อแก้ไข quote ที่มีอยู่ แล้วคืน object ที่อัพเดตแล้ว
+
+ไปทำ app.js ที่เป็นส่วนหลักและ importมาใช้
+import {
+  loadQuotes,
+  addQuote,
+  editQuote,
+} from "./quoteManagement.js"
+รอให้หน้าโหลด DOM เสร็จ (DOMContentLoaded) ก่อนทำงาน
+หา element ที่มี id เป็นquoteList 
+เรียก loadQuotes() เพื่อดึงข้อมูล quotes เป็น array
+สำหรับแต่ละ quote จะเรียก newQuoteElement(quote) เพื่อสร้าง DOM element ของ quote นั้น แล้ว appendChild เข้า quoteList
+ถ้าเกิด error ในการโหลด จะ alert(e.message)
+สร้าง async function newQuoteElement(quote) --> สร้าง DOM สำหรับ quote แต่ละรายการและสร้างelement มาแต่ละรายการ (div, p, button)พร้อมทั้งสร้าง classให้เหมาะแต่ละ method
+
+สร้าง function handleEdit(e) — เตรียมข้อมูลขึ้นฟอร์มเพื่อแก้ไข
+อ่าน id จาก data-id ของปุ่มที่ถูกคลิก
+แสดง confirm ให้ผู้ใช้ยืนยันก่อนจะเริ่มแก้ไข
+ถ้าผู้ใช้ยืนยัน:
+หา div[data-id="id"] เพื่อดึงข้อมูลปัจจุบันจาก DOM
+อ่าน children[0] เป็น content, children[1] เป็น author (ขึ้นกับโครงสร้าง newQuoteElement)
+หา form (id="quoteForm") แล้วเติมค่าในฟิลด์ content, author และซ่อนค่า quoteId (hidden input) เพื่อบอกว่ากำลังแก้ไขรายการใด
+//EDIT
+function handleEdit(e) {
+  const id = e.target.dataset.id
+  const ans = confirm(`Do you confirm to edit quote id: ${id}`)
+  if (ans) {
+    //find quote that match editing quote id
+    const quoteEle = document.querySelector(`div[data-id="${id}"]`)
+    const currentContent = quoteEle.children[0].textContent
+    const currentAuthor = quoteEle.children[1].textContent
+    //get author and content to form
+    const formEle = document.getElementById("quoteForm")
+    formEle.content.value = currentContent
+    formEle.author.value = currentAuthor
+    formEle.quoteId.value = id
+  }
+}
+
+
+สร้าง async function handleAddEdit(e) — เพิ่มหรือแก้ไขเมื่อ submit ฟอร์ม
+e.preventDefault() — ป้องกันการ submit แบบ default (reload หน้า)
+อ่านค่า quoteId (hidden input) เพื่อตรวจว่าเป็น edit หรือ add
+จากนั้นอ่านค่า content และ author แล้วใช้ trim() เพื่อเพิ่ม whitespace
+ใช้ if-else เช็ค
+ถ้ามี quoteId → ทำการแก้ไข:
+เรียก editQuote({ id, content, author }) —  ที่ส่ง PUT ไป backend
+ถ้า success → update ข้อความใน DOM (updateQuoteEle.children[0] และ [1])
+
+ถ้าไม่มี quoteId → ทำการเพิ่ม:
+เรียก addQuote({ content, author }) — คาดว่าจะคืนค่าของ quote ที่มี id
+สร้าง DOM element ใหม่ด้วย newQuoteElement(newQuote) แล้ว append ไปที่ quoteList
+สุดท้าย ล้างค่าฟอร์มทั้งหมด
+async function handleAddEdit(e) {
+  e.preventDefault()
+  const quoteId = formEle.quoteId.value
+  const content = formEle.content.value.trim()
+  const author = formEle.author.value.trim()
+
+  if (quoteId) {
+    //edit
+    try {
+      const updatedQuote = await editQuote({ id: quoteId, content, author })
+      console.log(updatedQuote)
+
+      const updateQuoteEle = document.querySelector(`div[data-id="${quoteId}"]`)
+      updateQuoteEle.children[0].textContent = content
+      updateQuoteEle.children[1].textContent = author
+    } catch (e) {
+      alert(e)
+    }
+  } else {
+    //add
+    try {
+      const newQuote = await addQuote({ content, author })
+      const newQuoteDivEle = newQuoteElement(newQuote)
+      const divQuoteListEle = document.getElementById("quoteList")
+      divQuoteListEle.appendChild(newQuoteDivEle)
+    } catch (e) {
+      alert(e)
+    }
+  }
+  formEle.content.value = ""
+  formEle.author.value = ""
+  formEle.quoteId.value = ""
+}
